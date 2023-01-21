@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
       <ThemeProvider theme={theme}>
          <div className="flex flex-col h-full">
             <Navbar />
-            <div className="mt-[4.1rem] h-full">{children}</div>
+            <div className="mt-[4.1rem] h-full p-5">{children}</div>
          </div>
       </ThemeProvider>
    )
