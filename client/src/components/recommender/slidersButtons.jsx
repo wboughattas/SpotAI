@@ -5,24 +5,13 @@ import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 
-const Sliders = ({ settings }) => {
-   const defaultValues = settings.map((setting) => {
-      return setting.defaultValue
-   })
-   const [sliderValues, setSliderValues] = useState(defaultValues)
-   const handleResetClick = () => {
-      setSliderValues(defaultValues)
-   }
-   const handleSliderOnChange = (event, index) => {
-      const newSliderValues = sliderValues.map((value, i) => {
-         if (i == index) {
-            return event.target.value
-         }
-         return value
-      })
-      setSliderValues(newSliderValues)
-   }
-
+const Sliders = ({
+   settings,
+   handleResetClick,
+   handleSliderOnChange,
+   handleGenerateSongs,
+   sliderValues,
+}) => {
    return (
       <div className="flex flex-col gap-2 justify-center text-lg">
          {settings.map((setting, index) => {
@@ -70,7 +59,10 @@ const Sliders = ({ settings }) => {
             >
                Reset
             </button>
-            <button className="bg-spotai-green rounded-full px-4 transisiton ease-in-out duration-300 hover:bg-spotai-green-dark">
+            <button
+               onClick={handleGenerateSongs}
+               className="bg-spotai-green rounded-full px-4 transisiton ease-in-out duration-300 hover:bg-spotai-green-dark"
+            >
                Generate
             </button>
          </div>

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 const Navbar = ({ handleLogin }) => {
    return (
-      <nav className="fixed w-full bg-spotai-black/50 p-2 rounded-lg flex gap-2 items-center">
+      <nav className="fixed w-full bg-spotai-black/50 p-2 rounded-lg flex gap-2 items-center z-10">
          <Link
             to="/recommender"
             className=" grow font-bold rounded-full px-5 py-3
