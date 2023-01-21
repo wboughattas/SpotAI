@@ -1,7 +1,8 @@
 export default async function fetchSpotAIData(
    sliderValues,
    settings,
-   setTrackIDS
+   setTrackIDS,
+   setIsLoading
 ) {
    let requestURL = 'http://127.0.0.1:5000/recommend_tracks/?'
    for (let index = 1; index < sliderValues.length; index++) {
@@ -16,6 +17,7 @@ export default async function fetchSpotAIData(
    console.log(requestURL)
    let response = await fetch(requestURL)
       .then((res) => {
+         setIsLoading(false)
          return res.json()
       })
       .catch((err) => console.error(err))

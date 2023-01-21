@@ -5,6 +5,8 @@ import settings from '../components/settings'
 import { useState } from 'react'
 import fetchSpotAIData from '../utils/api'
 import Playlist from '../components/recommender/playlist'
+import { CircularProgress } from '@mui/material'
+import { Backdrop } from '@mui/material'
 
 const RecommenderPage = () => {
    const defaultValues = settings.map((setting) => {
@@ -12,6 +14,7 @@ const RecommenderPage = () => {
    })
    const [sliderValues, setSliderValues] = useState(defaultValues)
    const [trackIDS, setTrackIDS] = useState(null)
+   const [isLoading, setIsLoading] = useState(false)
 
    const handleResetClick = () => {
       setSliderValues(defaultValues)
@@ -26,7 +29,8 @@ const RecommenderPage = () => {
       setSliderValues(newSliderValues)
    }
    const handleGenerateSongs = () => {
-      fetchSpotAIData(sliderValues, settings, setTrackIDS)
+      setIsLoading(true)
+      fetchSpotAIData(sliderValues, settings, setTrackIDS, setIsLoading)
    }
 
    return (
@@ -40,7 +44,18 @@ const RecommenderPage = () => {
                sliderValues={sliderValues}
                handleGenerateSongs={handleGenerateSongs}
             />
-            {trackIDS && <Playlist trackIDS={trackIDS} />}
+            {isLoading && (
+               <Backdrop
+                  sx={{
+                     color: '#fff',
+                     zIndex: (theme) => theme.zIndex.drawer + 1,
+                  }}
+                  open={isLoading}
+               >
+                  <CircularProgress color="success" />
+               </Backdrop>
+            )}
+            {trackIDS && !isLoading && <Playlist trackIDS={trackIDS} />}
          </div>
       </Layout>
    )
