@@ -6,10 +6,13 @@ from flasgger import Swagger
 import os
 from dotenv import load_dotenv
 
+from flask_cors import CORS
+
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
+CORS(app)
 
 swagger = Swagger(app)
 
@@ -138,7 +141,7 @@ def playlists():
     accuracy = request.args.get('accuracy', type=float)
     top_n = request.args.get('top_n')
 
-    # textbox
+    # range
     min_year = request.args.get('min_year')
     max_year = request.args.get('max_year')
 
