@@ -1,8 +1,4 @@
-const SpotifyController = ({
-   trackIDS,
-   currentTrackNumber,
-   setCurrentTrackNumber,
-}) => {
+const SpotifyController = ({ trackIDS, currentTrackNumber }) => {
    return (
       <iframe
          className="rounded-lg"

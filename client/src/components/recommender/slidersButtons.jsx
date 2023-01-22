@@ -29,6 +29,7 @@ const Sliders = ({
                         name={key}
                         icon={<CheckCircleOutlineOutlinedIcon />}
                         checkedIcon={<CheckCircleIcon />}
+                        color={'spotai-green'}
                      />
                   )}
 

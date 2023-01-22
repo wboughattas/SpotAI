@@ -120,8 +120,9 @@ const settings = [
       key: 'accuracy',
    },
    {
-      name: 'Minimum follower count',
-      description: 'How stricly your preferences shoud be applied',
+      name: 'Min follower count',
+      description:
+         'The minimum amount of followers any given artist in the playlist should have',
       min: 0,
       defaultValue: 100000,
       step: 1,
@@ -134,7 +135,7 @@ const settings = [
       min: 0,
       defaultValue: 50,
       step: 1,
-      max: 100000,
+      max: 100,
       key: 'top_n',
    },
 ]
