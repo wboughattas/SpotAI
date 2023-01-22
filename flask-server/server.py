@@ -1,5 +1,5 @@
 import itertools
-
+from waitress import serve
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from flasgger import Swagger
@@ -187,4 +187,4 @@ def playlists():
 
 
 if __name__ == "__main__":
-    app.run()
+    serve(app, host="0.0.0.0", port=30010)
