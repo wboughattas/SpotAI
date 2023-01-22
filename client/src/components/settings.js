@@ -135,7 +135,7 @@ const settings = [
       min: 0,
       defaultValue: 50,
       step: 1,
-      max: 100000,
+      max: 100,
       key: 'top_n',
    },
 ]
