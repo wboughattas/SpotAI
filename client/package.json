@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "proxy": "http://localhost:30010/",
+  "proxy": "http://localhost:5000/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,6 +14,7 @@
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.5",
+    "axios": "^1.2.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.7.0",
