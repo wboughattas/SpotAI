@@ -1,14 +1,41 @@
 import Layout from '../components/layout'
+import Recommender from '../components/recommender'
 import Header from '../components/recommender/header'
+import Sidebar from '../components/sidebar'
 import Sliders from '../components/recommender/slidersButtons'
 import settings from '../components/settings'
-import { useState } from 'react'
 import fetchSpotAIData from '../utils/api'
 import SpotifyController from '../components/recommender/spotifyController'
 import { CircularProgress } from '@mui/material'
 import { Backdrop } from '@mui/material'
+import React, { useState, useEffect } from 'react'
+import axios from "axios"
 
 const RecommenderPage = () => {
+   useEffect(() => {
+      getPlaylists();
+   }, []);
+
+   const [playlists, setPlaylists] = useState([])
+
+   const getPlaylists = async (e) => {
+      var token = window.localStorage.getItem("token");
+      const { data } = await axios.get("https://api.spotify.com/v1/me/playlists", {
+         headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+         },
+         params: { limit: 50, offset: 0 }
+      })
+      setPlaylists({ data }.data.items)
+   }
+
+   const [currentPL, setCurrentPL] = useState(0)
+   const handlePlaylistClick = (_event, pl) => {
+      setCurrentPL(pl)
+   }
+
    const defaultValues = settings.map((setting) => {
       return setting.defaultValue
    })
@@ -51,36 +78,46 @@ const RecommenderPage = () => {
 
    return (
       <Layout>
-         <div className="flex flex-col gap-5 p-10">
-            <Header />
-            <Sliders
-               settings={settings}
-               handleSliderOnChange={handleSliderOnChange}
-               handleReset={handleReset}
-               sliderValues={sliderValues}
-               selectedSliders={selectedSliders}
-               handleGenerateSongs={handleGenerateSongs}
-               handleCheckbox={handleCheckbox}
+         <div className="flex flex-row h-full">
+            <Sidebar
+               playlists={playlists}
+               handlePlaylistClick={handlePlaylistClick}
             />
-            {isLoading && (
-               <Backdrop
-                  sx={{
-                     color: '#fff',
-                     zIndex: (theme) => theme.zIndex.drawer + 1,
-                  }}
-                  open={isLoading}
-               >
-                  <CircularProgress color="success" />
-               </Backdrop>
-            )}
-            {trackIDS && !isLoading && (
-               <SpotifyController
-                  trackIDS={trackIDS}
-                  currentTrackNumber={currentTrackNumber}
-                  setCurrentTrackNumber={setCurrentTrackNumber}
-               />
-            )}
+            <div className="flex flex-col h-full">
+               <div className="flex flex-col gap-5 p-10">
+                  <Header />
+                  <Sliders
+                     settings={settings}
+                     handleSliderOnChange={handleSliderOnChange}
+                     handleReset={handleReset}
+                     sliderValues={sliderValues}
+                     selectedSliders={selectedSliders}
+                     handleGenerateSongs={handleGenerateSongs}
+                     handleCheckbox={handleCheckbox}
+                  />
+                  {isLoading && (
+                     <Backdrop
+                        sx={{
+                           color: '#fff',
+                           zIndex: (theme) => theme.zIndex.drawer + 1,
+                        }}
+                        open={isLoading}
+                     >
+                        <CircularProgress color="success" />
+                     </Backdrop>
+                  )}
+                  {trackIDS && !isLoading && (
+                     <SpotifyController
+                        trackIDS={trackIDS}
+                        currentTrackNumber={currentTrackNumber}
+                        setCurrentTrackNumber={setCurrentTrackNumber}
+                     />
+                  )}
+               </div>
+               <Recommender playlist={currentPL} />
+            </div>
          </div>
+
       </Layout>
    )
 }
