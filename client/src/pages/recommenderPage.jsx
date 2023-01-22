@@ -79,7 +79,8 @@ const RecommenderPage = () => {
          settings,
          setIsLoading,
          selectedSliders,
-         token
+         token,
+         setPlaylists
       )
    }
 
