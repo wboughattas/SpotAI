@@ -5,7 +5,7 @@ export default async function fetchSpotAIData(
    setIsLoading,
    selectedSliders
 ) {
-   let requestURL = 'http://127.0.0.1:30010/recommend_tracks/?'
+   let requestURL = 'http://127.0.0.1:5000/recommend_tracks/?'
    for (let index = 1; index < sliderValues.length; index++) {
       const { step, key } = settings[index]
       requestURL += selectedSliders.includes(key)
