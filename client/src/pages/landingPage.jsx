@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 const LandingPage = () => {
 
    const CLIENT_ID = "02baa4faac11484bb2f10260c2c96f8c"
-   const REDIRECT_URI = "http://127.0.0.1:5173/recommender"
+   const REDIRECT_URI = "http://localhost:5173/recommender"
    const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
    const RESPONSE_TYPE = "token"
 
@@ -25,10 +25,6 @@ const LandingPage = () => {
       setToken(token)
 
    }, [])
-   const logout = () => {
-      setToken("")
-      window.localStorage.removeItem("token")
-   }
 
    return (
       <Layout>
@@ -39,12 +35,10 @@ const LandingPage = () => {
                }
             </div>
 
-            {!token ?
+
                <a className="bg-spotai-black rounded-full py-2 px-4 transisiton ease-in-out duration-300 hover:bg-spotai-gray text-center inline pointer text-lg"
                   href={`${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}`}>Get Started</a>
-               : <button className="bg-spotai-black rounded-full py-2 px-4 transisiton ease-in-out duration-300 hover:bg-spotai-gray text-center inline pointer text-lg"
-                  onClick={logout}>Logout</button>
-            }
+
          </div>
       </Layout>
    )
