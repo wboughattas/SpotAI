@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import React, { useState, useEffect } from 'react'
 
 const Navbar = ({ handleLogin }) => {
-   const CLIENT_ID = '02baa4faac11484bb2f10260c2c96f8c'
+   const CLIENT_ID = '0788b6e1b4fa45b1b6e62e2f05e53815'
    const REDIRECT_URI = 'http://localhost:5173/recommender'
    const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize'
    const RESPONSE_TYPE = 'token'
