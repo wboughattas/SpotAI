@@ -1,5 +1,4 @@
 const Header = ({ playlist }) => {
-   //    const { title, length, songs } = playlist
 
    return (
       <div className="flex flex-row justify-center gap-10">

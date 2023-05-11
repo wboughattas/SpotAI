@@ -1,11 +1,14 @@
 import itertools
 from waitress import serve
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect
 from flask_mysqldb import MySQL
 from flasgger import Swagger
 import os
 from dotenv import load_dotenv
-
+import string
+import secrets
+import requests
+import base64
 from flask_cors import CORS
 
 load_dotenv()
@@ -26,14 +29,81 @@ mysql = MySQL(app)
 
 TABLE_NAME = 'track'
 
-
 # API routes
+REDIRECT_URI = 'http://localhost:5001/callback'
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+CLIENT_REDIRECT = 'http://localhost:5173/recommender'
+
+
 @app.route("/")
 def index():
     return "Hello"
 
 
-@app.route("/recommend_tracks/")
+@app.route("/spotify_login")
+def spotify_login():
+    auth_endpoint = 'https://accounts.spotify.com/authorize?'
+
+    scope = "playlist-modify-private+playlist-modify-public"
+    choices = string.ascii_letters + string.digits
+    state = choices.join(secrets.choice(choices)for i in range(16))
+
+    return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
+
+
+@app.route("/callback")
+def callback():
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if (state is None):
+        return redirect('/#?error=state_mismatch')
+    else:
+        url = 'https://accounts.spotify.com/api/token'
+        headers = {
+            'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')
+        }
+        data = {
+            'code': code,
+            'redirect_uri': REDIRECT_URI,
+            'grant_type': 'authorization_code'
+        }
+
+        res = requests.post(url, data=data, headers=headers)
+
+        if (res.ok):
+            data = res.json()
+            access_token = data['access_token']
+            refresh_token = data['refresh_token']
+
+            return redirect(f'{CLIENT_REDIRECT}?access_token={access_token}&refresh_token={refresh_token}')
+        else:
+            return redirect(f'{CLIENT_REDIRECT}?error=invalid_token')
+
+
+@app.route('/refresh_token')
+def refresh_token():
+    refresh_token = request.args.get('refresh_token')
+
+    url = 'https://accounts.spotify.com/api/token',
+    headers = {'Authorization': 'Basic ' + base64.b64encode(
+        bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')},
+    data = {
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token
+    }
+
+    response = requests.post(
+        url, headers=headers, data=data)
+    if response.ok:
+        access_token = response.json().get('access_token')
+        return jsonify({'access_token': access_token})
+    else:
+        return jsonify({'error': 'invalid_token'}), 401
+
+
+@ app.route("/recommend_tracks/")
 def playlists():
     """
     return list of recommended tracks based on user input
@@ -174,7 +244,7 @@ def playlists():
         GROUP BY t.id
         {f'HAVING SUM(p.followers) > {min_follower_count}' if min_follower_count else ''}
         ORDER BY score DESC
-        {f'LIMIT {top_n}' if top_n else ''}     
+        {f'LIMIT {top_n}' if top_n else ''}
     '''
     cursor.execute(query)
     response = cursor.fetchall()

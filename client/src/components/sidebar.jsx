@@ -13,7 +13,7 @@ const Sidebar = ({ playlists, handlePlaylistClick }) => {
          </div>
 
          <div className="bg-spotai-black/20 rounded-2xl grow flex flex-col overflow-auto gap-4 p-4 ">
-            {playlists.map((pl, index) => {
+            {playlists.map((pl) => {
                const { name } = pl
                return (
                   <button

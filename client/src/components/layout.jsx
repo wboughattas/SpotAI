@@ -1,6 +1,6 @@
 import Navbar from './navbar'
-
 import { createTheme, ThemeProvider } from '@mui/material/styles'
+import loginSpotify from '../api/loginSpotify'
 
 const theme = createTheme({
    palette: {
@@ -23,10 +23,17 @@ const theme = createTheme({
 })
 
 const Layout = ({ children }) => {
+   const [token, setToken] = useState(null)
+
+   const handleLogin = () => {
+      const res = loginSpotify()
+      console.log(res)
+   }
+
    return (
       <ThemeProvider theme={theme}>
          <div className="flex flex-col h-full">
-            <Navbar />
+            <Navbar handleLogin={handleLogin} token={token} />
             <div className="mt-[4.1rem] h-full p-5">{children}</div>
          </div>
       </ThemeProvider>

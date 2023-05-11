@@ -4,7 +4,7 @@ import Header from '../components/recommender/header'
 import Sidebar from '../components/sidebar'
 import Sliders from '../components/recommender/slidersButtons'
 import settings from '../components/settings'
-import createPlaylist from '../utils/api'
+import createPlaylist from '../api/createPlaylist'
 import { CircularProgress } from '@mui/material'
 import { Backdrop } from '@mui/material'
 import React, { useState, useEffect } from 'react'
@@ -65,6 +65,7 @@ const RecommenderPage = () => {
       })
       setSliderValues(newSliderValues)
    }
+   
    const handleCheckbox = (event) => {
       const key = event.target.name
       const newSliders = event.target.checked
@@ -92,6 +93,7 @@ const RecommenderPage = () => {
                handlePlaylistClick={handlePlaylistClick}
             />
             <div className="flex flex-col h-full">
+               <Recommender playlist={currentPL} />
                <div className="flex flex-col gap-5 p-10">
                   <Header />
                   <Sliders
@@ -115,7 +117,6 @@ const RecommenderPage = () => {
                      </Backdrop>
                   )}
                </div>
-               <Recommender playlist={currentPL} />
             </div>
          </div>
       </Layout>
