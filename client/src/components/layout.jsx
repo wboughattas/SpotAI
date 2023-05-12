@@ -1,6 +1,7 @@
 import Navbar from './navbar'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import loginSpotify from '../api/loginSpotify'
+import { useState } from 'react'
 
 const theme = createTheme({
    palette: {
@@ -27,7 +28,6 @@ const Layout = ({ children }) => {
 
    const handleLogin = () => {
       const res = loginSpotify()
-      console.log(res)
    }
 
    return (
