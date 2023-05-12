@@ -10,12 +10,12 @@ import secrets
 import requests
 import base64
 from flask_cors import CORS
+import random
 
-load_dotenv()
+load_dotenv('./.env')
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
-CORS(app)
 
 swagger = Swagger(app)
 
@@ -31,23 +31,25 @@ TABLE_NAME = 'track'
 
 # API routes
 REDIRECT_URI = 'http://localhost:5001/callback'
-SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
 CLIENT_REDIRECT = 'http://localhost:5173/recommender'
+
+
 
 
 @app.route("/")
 def index():
     return "Hello"
 
-
+CORS(app)
 @app.route("/spotify_login")
 def spotify_login():
     auth_endpoint = 'https://accounts.spotify.com/authorize?'
 
     scope = "playlist-modify-private+playlist-modify-public"
     choices = string.ascii_letters + string.digits
-    state = choices.join(secrets.choice(choices)for i in range(16))
+    state = ''.join(random.choice(choices) for i in range(16))
 
     return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
 
