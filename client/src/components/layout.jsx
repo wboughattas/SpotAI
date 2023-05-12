@@ -1,5 +1,6 @@
+import { useContext } from 'react'
 import Navbar from './navbar'
-
+import AuthContext from '../contexts/AuthContext'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 
 const theme = createTheme({
@@ -23,12 +24,15 @@ const theme = createTheme({
 })
 
 const Layout = ({ children }) => {
+   const [token, setToken] = useState(null)
    return (
       <ThemeProvider theme={theme}>
-         <div className="flex flex-col h-full">
-            <Navbar />
-            <div className="mt-[4.1rem] h-full p-5">{children}</div>
-         </div>
+         <AuthContext.Provider value={{ token: token }}>
+            <div className="flex flex-col h-full">
+               <Navbar />
+               <div className="mt-[4.1rem] h-full p-5">{children}</div>
+            </div>
+         </AuthContext.Provider>
       </ThemeProvider>
    )
 }
