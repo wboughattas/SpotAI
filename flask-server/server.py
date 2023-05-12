@@ -1,6 +1,6 @@
 import itertools
 from waitress import serve
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, session
 from flask_mysqldb import MySQL
 from flasgger import Swagger
 import os
@@ -10,20 +10,20 @@ import secrets
 import requests
 import base64
 from flask_cors import CORS
-import random
 
 load_dotenv('./.env')
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
+CORS(app)
 
 swagger = Swagger(app)
 
 # Database info
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 
 mysql = MySQL(app)
 
@@ -31,40 +31,42 @@ TABLE_NAME = 'track'
 
 # API routes
 REDIRECT_URI = 'http://localhost:5001/callback'
-SPOTIFY_CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 CLIENT_REDIRECT = 'http://localhost:5173/recommender'
 
-
-
+app.secret_key = b'_5#y2Ll2F4G8z\n\xec]/'
 
 @app.route("/")
 def index():
     return "Hello"
 
-CORS(app)
+
 @app.route("/spotify_login")
 def spotify_login():
     auth_endpoint = 'https://accounts.spotify.com/authorize?'
 
     scope = "playlist-modify-private+playlist-modify-public"
     choices = string.ascii_letters + string.digits
-    state = ''.join(random.choice(choices) for i in range(16))
-
-    return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
+    state = choices.join(secrets.choice(choices)for i in range(16))
+    session['state'] = state
+    return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&'
+                    f'scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
 
 
 @app.route("/callback")
-def callback():
+def get_tokens():
     code = request.args.get('code')
     state = request.args.get('state')
 
-    if state is None:
+    if (state is None) and (state != session['state']):
         return redirect('/#?error=state_mismatch')
     else:
+        # print(code)
         url = 'https://accounts.spotify.com/api/token'
         headers = {
-            'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')
+            'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8'))
+            .decode('utf-8')
         }
         data = {
             'code': code,
@@ -76,24 +78,28 @@ def callback():
 
         if res.ok:
             data = res.json()
-            access_token = data['access_token']
-            refresh_token = data['refresh_token']
+            print(data)
+            session['access_token'] = data['access_token']
+            session['refresh_token'] = data['refresh_token']
 
-            return redirect(f'{CLIENT_REDIRECT}?access_token={access_token}&refresh_token={refresh_token}')
-        else:
-            return redirect(f'{CLIENT_REDIRECT}?error=invalid_token')
+        return redirect(CLIENT_REDIRECT)
 
+@app.route("/is_logged_in")
+def is_logged_in():
+    logged_in = 'access_token' in session
+    print(logged_in)
+    return {'logged_in': logged_in}
 
 @app.route('/refresh_token')
 def refresh_token():
-    refresh_token = request.args.get('refresh_token')
+    refresh_token_arg = request.args.get('refresh_token')
 
     url = 'https://accounts.spotify.com/api/token',
     headers = {'Authorization': 'Basic ' + base64.b64encode(
         bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')},
     data = {
         'grant_type': 'refresh_token',
-        'refresh_token': refresh_token
+        'refresh_token': refresh_token_arg
     }
 
     response = requests.post(
