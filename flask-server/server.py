@@ -1,6 +1,6 @@
 import itertools
 from waitress import serve
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, session
 from flask_mysqldb import MySQL
 from flasgger import Swagger
 import os
@@ -11,7 +11,7 @@ import requests
 import base64
 from flask_cors import CORS
 
-load_dotenv(dotenv_path='../client/node_modules/.env')
+load_dotenv(dotenv_path='./.env')
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
@@ -35,7 +35,6 @@ SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 CLIENT_REDIRECT = 'http://localhost:5173/recommender'
 
-
 @app.route("/")
 def index():
     return "Hello"
@@ -48,21 +47,23 @@ def spotify_login():
     scope = "playlist-modify-private+playlist-modify-public"
     choices = string.ascii_letters + string.digits
     state = choices.join(secrets.choice(choices)for i in range(16))
-
-    return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
+    session['state'] = state
+    return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&'
+                    f'scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
 
 
 @app.route("/callback")
-def callback():
+def get_tokens():
     code = request.args.get('code')
     state = request.args.get('state')
 
-    if (state is None):
+    if (state is None) and (state != session['state']):
         return redirect('/#?error=state_mismatch')
     else:
         url = 'https://accounts.spotify.com/api/token'
         headers = {
-            'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')
+            'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8'))
+            .decode('utf-8')
         }
         data = {
             'code': code,
@@ -72,26 +73,28 @@ def callback():
 
         res = requests.post(url, data=data, headers=headers)
 
-        if (res.ok):
+        if res.ok:
             data = res.json()
-            access_token = data['access_token']
-            refresh_token = data['refresh_token']
 
-            return redirect(f'{CLIENT_REDIRECT}?access_token={access_token}&refresh_token={refresh_token}')
-        else:
-            return redirect(f'{CLIENT_REDIRECT}?error=invalid_token')
+            session['access_token'] = data['access_token']
+            session['refresh_token'] = data['refresh_token']
 
+        return redirect(CLIENT_REDIRECT)
+
+@app.route("/is_logged_in")
+def is_logged_in():
+    return session['access_token'] is not None
 
 @app.route('/refresh_token')
 def refresh_token():
-    refresh_token = request.args.get('refresh_token')
+    refresh_token_arg = request.args.get('refresh_token')
 
     url = 'https://accounts.spotify.com/api/token',
     headers = {'Authorization': 'Basic ' + base64.b64encode(
         bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')},
     data = {
         'grant_type': 'refresh_token',
-        'refresh_token': refresh_token
+        'refresh_token': refresh_token_arg
     }
 
     response = requests.post(

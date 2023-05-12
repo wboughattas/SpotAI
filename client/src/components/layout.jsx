@@ -2,6 +2,7 @@ import Navbar from './navbar'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import loginSpotify from '../api/loginSpotify'
 import { useState } from 'react'
+import AuthContext from '../contexts/AuthContext'
 
 const theme = createTheme({
    palette: {
@@ -24,18 +25,25 @@ const theme = createTheme({
 })
 
 const Layout = ({ children }) => {
-   const [token, setToken] = useState(null)
-
+   const [loggedIn, setLoggedIn] = useState(false)
    const handleLogin = () => {
-      const res = loginSpotify()
+      loginSpotify()
    }
 
    return (
       <ThemeProvider theme={theme}>
-         <div className="flex flex-col h-full">
-            <Navbar handleLogin={handleLogin} token={token} />
-            <div className="mt-[4.1rem] h-full p-5">{children}</div>
-         </div>
+         <AuthContext.Provider
+            value={{
+               loggedIn: loggedIn,
+               setLoggedIn: setLoggedIn,
+               backendUri: 'http://localhost:5001',
+            }}
+         >
+            <div className="flex flex-col h-full">
+               <Navbar handleLogin={handleLogin} />
+               <div className="mt-[4.1rem] h-full p-5">{children}</div>
+            </div>
+         </AuthContext.Provider>
       </ThemeProvider>
    )
 }

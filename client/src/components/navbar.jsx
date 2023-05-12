@@ -1,29 +1,23 @@
 import { Link } from 'react-router-dom'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import axios from 'axios'
+import AuthContext from '../contexts/AuthContext'
 
-const Navbar = ({ handleLogin, token }) => {
-   // useEffect(() => {
-   //    const hash = window.location.hash
-   //    let token = window.localStorage.getItem('token')
+const Navbar = ({ handleLogin }) => {
+   const { backendUri, loggedIn, setLoggedIn } = useContext(AuthContext)
 
-   //    if (!token && hash) {
-   //       token = hash
-   //          .substring(1)
-   //          .split('&')
-   //          .find((elem) => elem.startsWith('access_token'))
-   //          .split('=')[1]
-
-   //       window.location.hash = ''
-   //       window.localStorage.setItem('token', token)
-   //    }
-
-   //    setToken(token)
-   // }, [])
-   const logout = () => {
-      setToken('')
-      // window.localStorage.removeItem('token')
-      // window.location.reload(false)
+   const checkLoggedIn = async () => {
+      const res = await axios.get(backendUri + '/is_logged_in')
+      if (res.status === 200) {
+         console.log(res.data)
+         setLoggedIn(res.data.logged_in)
+      }
    }
+
+   useEffect(() => {
+      checkLoggedIn()
+   }, [])
+
    return (
       <nav className="fixed w-full bg-spotai-black/50 p-2 rounded-lg flex gap-2 items-center z-10">
          <Link
@@ -40,8 +34,7 @@ const Navbar = ({ handleLogin, token }) => {
          >
             {'About'}
          </Link>
-
-         {!token ? (
+         {loggedIn !== null && !loggedIn ? (
             <button
                className="rounded-full px-5 py-3 bg-spotai-military transisiton ease-in-out duration-300
             hover:bg-spotai-military-dark"
@@ -53,7 +46,6 @@ const Navbar = ({ handleLogin, token }) => {
             <button
                className="rounded-full px-5 py-3 bg-spotai-military transisiton ease-in-out duration-300
             hover:bg-spotai-military-dark"
-               onClick={logout}
             >
                Logout
             </button>
