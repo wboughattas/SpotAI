@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
 CORS(app)
 
-app.secret_key = b'a141f3ed5a63f26c3d4efd15193f3f1a83bb35afc3c20d0689e621b27575fc02'
+app.secret_key = b'a141f3ed5a63f26c3d4efd15193f3f1a83bb35afc3c90d0689e621b27575fc02'
 
 swagger = Swagger(app)
 
