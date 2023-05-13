@@ -17,6 +17,8 @@ app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
 CORS(app)
 
+app.secret_key = b'a141f3ed5a63f26c3d4efd15193f3f1a83bb35afc3c20d0689e621b27575fc02'
+
 swagger = Swagger(app)
 
 # Database info
@@ -35,21 +37,19 @@ SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 CLIENT_REDIRECT = 'http://localhost:5173/recommender'
 
-app.secret_key = b'_5#y2Ll2F4G8z\n\xec]/'
 
 @app.route("/")
 def index():
     return "Hello"
 
-
 @app.route("/spotify_login")
 def spotify_login():
     auth_endpoint = 'https://accounts.spotify.com/authorize?'
-
     scope = "playlist-modify-private+playlist-modify-public"
     choices = string.ascii_letters + string.digits
-    state = choices.join(secrets.choice(choices)for i in range(16))
+    state = ''.join(secrets.choice(choices)for i in range(16))
     session['state'] = state
+    session.modified = True
     return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&'
                     f'scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
 
@@ -60,9 +60,9 @@ def get_tokens():
     state = request.args.get('state')
 
     if (state is None) and (state != session['state']):
+    # if (state is None) or (state != session['state']):
         return redirect('/#?error=state_mismatch')
     else:
-        # print(code)
         url = 'https://accounts.spotify.com/api/token'
         headers = {
             'Authorization': 'Basic ' + base64.b64encode(bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8'))
@@ -78,38 +78,25 @@ def get_tokens():
 
         if res.ok:
             data = res.json()
-            print(data)
             session['access_token'] = data['access_token']
             session['refresh_token'] = data['refresh_token']
+            session.modified = True
+        else:
+            print(f"Error: {res.status_code}\n{res.text}")
 
         return redirect(CLIENT_REDIRECT)
 
 @app.route("/is_logged_in")
 def is_logged_in():
     logged_in = 'access_token' in session
-    print(logged_in)
-    return {'logged_in': logged_in}
-
-@app.route('/refresh_token')
-def refresh_token():
-    refresh_token_arg = request.args.get('refresh_token')
-
-    url = 'https://accounts.spotify.com/api/token',
-    headers = {'Authorization': 'Basic ' + base64.b64encode(
-        bytes(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}", 'utf-8')).decode('utf-8')},
-    data = {
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token_arg
-    }
-
-    response = requests.post(
-        url, headers=headers, data=data)
-    if response.ok:
-        access_token = response.json().get('access_token')
-        return jsonify({'access_token': access_token})
+    if 'count' in session:
+        session['count'] += 1
     else:
-        return jsonify({'error': 'invalid_token'}), 401
-
+        session['count'] = 0
+    print(session)
+    if logged_in:
+        print(session['access_token'])
+    return {'logged_in': logged_in}
 
 @ app.route("/recommend_tracks/")
 def playlists():
