@@ -88,13 +88,7 @@ def get_tokens():
 @app.route("/is_logged_in")
 def is_logged_in():
     logged_in = 'access_token' in session
-    if 'count' in session:
-        session['count'] += 1
-    else:
-        session['count'] = 0
     print(session)
-    if logged_in:
-        print(session['access_token'])
     return {'logged_in': logged_in}
 
 @ app.route("/recommend_tracks/")
