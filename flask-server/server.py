@@ -15,9 +15,9 @@ load_dotenv('./.env')
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {'ui_params': {'displayRequestDuration': 'true'}, }
-CORS(app)
+CORS(app, supports_credentials=True)
 
-app.secret_key = b'a141f3ed5a63f26c3d4efd15193f3f1a83bb35afc3c90d0689e621b27575fc02'
+app.secret_key = os.getenv('APP_SK').encode()
 
 swagger = Swagger(app)
 
@@ -37,10 +37,6 @@ SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 CLIENT_REDIRECT = 'http://localhost:5173/recommender'
 
-@app.route("/")
-def index():
-    return "Hello"
-
 @app.route("/spotify_login")
 def spotify_login():
     auth_endpoint = 'https://accounts.spotify.com/authorize?'
@@ -48,6 +44,8 @@ def spotify_login():
     choices = string.ascii_letters + string.digits
     state = ''.join(secrets.choice(choices)for i in range(16))
     session['state'] = state
+    print(session)
+    print(request.cookies)
     session.modified = True
     return redirect(f'{auth_endpoint}response_type=code&client_id={SPOTIFY_CLIENT_ID}&'
                     f'scope={scope}&state={state}&redirect_uri={REDIRECT_URI}')
@@ -79,6 +77,8 @@ def get_tokens():
             data = res.json()
             session['access_token'] = data['access_token']
             session['refresh_token'] = data['refresh_token']
+            print(session)
+            print(request.cookies)
             session.modified = True
         else:
             print(f"Error: {res.status_code}\n{res.text}")
@@ -89,6 +89,7 @@ def get_tokens():
 def is_logged_in():
     logged_in = 'access_token' in session
     print(session)
+    print(request.cookies)
     return {'logged_in': logged_in}
 
 @ app.route("/recommend_tracks/")
